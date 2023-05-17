@@ -335,11 +335,13 @@ class StatusPage extends BeanModel {
 
         log.debug("server/model/status_page.js/StatusPage/getIcon()",``);
 
+        /*
         if (!this.icon) {
             return "/icon.svg";
         } else {
             return this.icon;
         }
+        */
     }
 
     /**

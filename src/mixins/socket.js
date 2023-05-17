@@ -18,6 +18,8 @@ const favicon = new Favico({
     animation: "none"
 });
 
+const TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Imd1ZXN0IiwiaWF0IjoxNjgxNTkzMTY5fQ.tOVExOZ4lTa3pig6eOw1RyHeo62UH5rQzDjR5Srf6s4"
+
 export default {
 
     data() {
@@ -79,13 +81,13 @@ export default {
             }
 
             // No need to connect to the socket.io for status page
-            if (! bypass && location.pathname) {
-                for (let page of noSocketIOPages) {
-                    if (location.pathname.match(page)) {
-                        return;
-                    }
-                }
-            }
+            // if (! bypass && location.pathname) {
+                // for (let page of noSocketIOPages) {
+                //     if (location.pathname.match(page)) {
+                //         return;
+                //     }
+                // }
+            // }
 
             this.socket.initedSocketIO = true;
 
@@ -241,7 +243,7 @@ export default {
             });
 
             socket.on("connect", () => {
-                console.log("Connected to the socket server");
+                console.log("M: [mixins/socket.js/socket.on('connect')]Connected to the socket server");
                 this.socket.connectCount++;
                 this.socket.connected = true;
                 this.showReverseProxyGuide = false;
@@ -251,7 +253,8 @@ export default {
                     this.clearData();
                 }
 
-                let token = this.storage().token;
+                // let token = this.storage().token;
+                let token = TOKEN;
 
                 if (token) {
                     if (token !== "autoLogin") {
@@ -297,9 +300,11 @@ export default {
          * @returns {(Object|undefined)}
          */
         getJWTPayload() {
-            const jwtToken = this.$root.storage().token;
+            // const jwtToken = this.$root.storage().token;
+            const jwtToken = TOKEN;
 
             if (jwtToken && jwtToken !== "autoLogin") {
+                // console.log("DECODE: ", jwtDecode(jwtToken))
                 return jwtDecode(jwtToken);
             }
             return undefined;
@@ -358,15 +363,17 @@ export default {
             socket.emit("login", {
                 username,
                 password,
-                token,
+                TOKEN,
             }, (res) => {
                 if (res.tokenRequired) {
                     callback(res);
                 }
 
                 if (res.ok) {
-                    this.storage().token = res.token;
-                    this.socket.token = res.token;
+                    // this.storage().token = res.token;
+                    // this.socket.token = res.token;
+                    this.storage().token = TOKEN;
+                    this.socket.token = TOKEN;
                     this.loggedIn = true;
                     this.username = this.getJWTPayload()?.username;
 
@@ -383,7 +390,9 @@ export default {
          * @param {string} token Token to log in with
          */
         loginByToken(token) {
-            socket.emit("loginByToken", token, (res) => {
+            // token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Imd1ZXN0IiwiaWF0IjoxNjgxNTkzMTY5fQ.tOVExOZ4lTa3pig6eOw1RyHeo62UH5rQzDjR5Srf6s4"
+            // socket.emit("loginByToken", token, (res) => {
+            socket.emit("loginByToken", TOKEN, (res) => {
                 this.allowLoginDialog = true;
 
                 if (! res.ok) {
@@ -438,7 +447,8 @@ export default {
          * @param {socketCB} callback
          */
         verifyToken(token, callback) {
-            socket.emit("verifyToken", token, callback);
+            // socket.emit("verifyToken", token, callback);
+            socket.emit("verifyToken", TOKEN, callback);
         },
 
         /**
@@ -625,6 +635,7 @@ export default {
          * @param {socketCB} callback
          */
         getMonitorBeats(monitorID, period, callback) {
+            console.log("M: [mixins/socket.js/getMonitorBeats] socket: ", socket)
             socket.emit("getMonitorBeats", monitorID, period, callback);
         }
     },

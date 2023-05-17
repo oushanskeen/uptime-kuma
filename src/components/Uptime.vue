@@ -1,5 +1,7 @@
 <template>
-    <span :class="className" :title="title">{{ uptime }}</span>
+    <div>
+        <span :class="className" :title="title">{{ uptime }}</span>
+    </div>
 </template>
 
 <script>

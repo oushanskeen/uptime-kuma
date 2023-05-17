@@ -70,13 +70,51 @@
                                     <div :key="$root.userHeartbeatBar" class="col-3 col-md-4">
                                         <HeartbeatBar size="small" :monitor-id="monitor.element.id" />
                                     </div>
+
                                 </div>
+
                                 <div class="col">
                                     <PingChart :monitor-id="monitor.element.id" />
                                 </div>
-                                <div class="col">
-                                    <p>{{ monitor }}</p>
+
+                                <div class="shadow-box big-padding text-center stats">
+                                    <div class="row">
+
+                                      <div class="col">
+                                          <h4>Response</h4>
+                                          <p>({{ $t("Current") }})</p>
+                                          <span class="num">
+                                            <span>{{ ping(monitor.element.id) }} ms</span>
+                                          </span>
+                                      </div>
+
+                                      <div class="col">
+                                          <h4>Avg. Response</h4>
+                                          <p>({{ $t("24-hour") }})</p>
+                                          <span class="num">
+                                            <span>{{ avgPing(monitor.element.id) }} ms</span>
+                                          </span>
+                                      </div>
+
+                                    <div class="col">
+                                        <h4>{{ $t("Uptime") }}</h4>
+                                        <p>(24{{ $t("-hour") }})</p>
+                                        <span class="num">
+                                            <span :class="className" :title="title">{{ uptime("24",monitor.element.id) }}</span>
+                                        </span>
+                                    </div>
+
+                                    <div class="col">
+                                        <h4>{{$t("Uptime") }}</h4>
+                                        <p>(30{{ $t("-day") }})</p>
+                                        <span class="num">
+                                            <span :class="className" :title="title">{{ uptime("720",monitor.element.id) }}</span>
+                                            </span>
+                                    </div>
+
+                                    </div>
                                 </div>
+
                             </div>
                         </template>
                     </Draggable>
@@ -115,9 +153,56 @@ export default {
     },
     data() {
         return {
-
+            monitor: null,
+            unit: {
+              type: String,
+              default: "ms",
+            },
         };
     },
+    async mounted() {
+        this.slug = this.overrideSlug || this.$route.params.slug;
+
+        if (!this.slug) {
+            this.slug = "default";
+        }
+
+        this.getData().then((res) => {
+            this.config = res.data.config;
+
+            if (!this.config.domainNameList) {
+                this.config.domainNameList = [];
+      у       }
+
+            if (this.config.icon) {
+                this.imgDataUrl = this.config.icon;
+            }
+
+            this.incident = res.data.incident;
+            this.maintenanceList = res.data.maintenanceList;
+            this.$root.publicGroupList = res.data.publicGroupList;
+        }).catch(function (error) {
+            if (error.response.status === 404) {
+                location.href = "/page-not-found";
+            }
+            console.log(error);
+            console.log("Root publicGroupList res: ");
+        });
+
+        // Configure auto-refresh loop
+        this.updateHeartbeatList();
+        feedInterval = setInterval(() => {
+            this.updateHeartbeatList();
+        }, (this.autoRefreshInterval * 60 + 10) * 1000);
+
+        this.updateUpdateTimer();
+
+        // Go to edit page if ?edit present
+        // null means ?edit present, but no value
+        if (this.$route.query.edit || this.$route.query.edit === null) {
+            this.edit();
+        }
+},
     computed: {
         showGroupDrag() {
             return (this.$root.publicGroupList.length >= 2);
@@ -133,6 +218,86 @@ export default {
          */
         removeGroup(index) {
             this.$root.publicGroupList.splice(index, 1);
+        },
+
+        avgPing(monitorId) {
+            console.log("M: [PublicGroupList.vue/script/computed/avgPing] monitor.id: ", monitorId)
+            //try{
+                if (this.$root.avgPingList[monitorId] || this.$root.avgPingList[monitorId] === 0) {
+                    return this.$root.avgPingList[monitorId];
+                }
+            //}catch(err){
+            //    <!-- return err -->
+            //}
+
+            return this.$t("notAvailableShort");
+            //return () => monitorId
+            //return "monitorId"
+        },
+        lastHeartBeat(monitorId) {  
+            //console.log("lastHeartbeatList: ", this.$root.lastHeartbeatList)
+            try{
+                console.log("lastHeartbeatList: ", this.$root.lastHeartbeatList["1"].ping)
+                //this.$root.lastHeartbeatList["1"]
+                if (this.$root.lastHeartbeatList && this.$root.lastHeartbeatList[monitorId]) {
+                    return this.$root.lastHeartbeatList[monitorId];
+                }
+            }catch(err){
+                return "" + err
+            }
+
+            return {
+                status: -1,
+            };
+        },
+        ping(monitorId) {
+
+            //try{
+                if (this.lastHeartBeat(monitorId).ping || this.lastHeartBeat(monitorId).ping === 0) {
+                    return this.lastHeartBeat(monitorId).ping;
+                }
+            //}catch(e){
+            //    return this.lastHeartBeat(monitorId)
+            //}
+
+            return this.$t("notAvailableShort");
+        },
+        uptime(type, monitorId) {
+            if (this.type === "maintenance") {
+                return this.$t("statusMaintenance");
+            }
+
+            let key = monitorId + "_" + type;
+            
+
+            if (this.$root.uptimeList[key] !== undefined) {
+                let result = Math.round(this.$root.uptimeList[key] * 10000) / 100;
+                // Only perform sanity check on status page. See louislam/uptime-kuma#2628
+                if (this.$route.path.startsWith("/status") && result > 100) {
+                    return "100%";
+                } else {
+                    return result + "%";
+                }
+            }
+
+            //return this.$root.uptimeList
+            //return key
+
+            return this.$t("notAvailableShort");
+        },
+        async value(from, to) {
+            let diff = to - from;
+            let frames = 12;
+            let step = Math.floor(diff / frames);
+
+            if (! (isNaN(step) || ! this.isNum || (diff > 0 && step < 1) || (diff < 0 && step > 1) || diff === 0)) {
+                for (let i = 1; i < frames; i++) {
+                    this.output += step;
+                    await sleep(15);
+                }
+            }
+
+            this.output = this.value;
         },
 
         /**
@@ -170,6 +335,24 @@ export default {
                 return this.$root.monitorList[monitor.element.id].type === "http" || this.$root.monitorList[monitor.element.id].type === "keyword";
             }
             return monitor.element.sendUrl && monitor.element.url && monitor.element.url !== "https://" && !this.editMode;
+        },
+
+        /**
+         * Return the correct title for the ping stat
+         * @param {boolean} [average=false] Is the statistic an average?
+         * @returns {string} Title formated dependant on monitor type
+         */
+        pingTitle(average = false) {
+            let translationPrefix = "";
+            if (average) {
+                translationPrefix = "Avg. ";
+            }
+
+            if (this.monitor.type === "http") {
+                return this.$t(translationPrefix + "Response");
+            }
+
+            return this.$t(translationPrefix + "Ping");
         },
     }
 };

@@ -123,11 +123,12 @@
         <div :class="{ edit: enableEditMode}" class="main">
             <!-- Logo & Title -->
             <h1 class="mb-4 title-flex">
-                <!-- Logo -->
+                <!-- Logo 
                 <span class="logo-wrapper" @click="showImageCropUploadMethod">
                     <img :src="logoURL" alt class="logo me-2" :class="logoClass"/>
                     <font-awesome-icon v-if="enableEditMode" class="icon-upload" icon="upload"/>
                 </span>
+                -->
 
                 <!-- Uploader -->
                 <!--    url="/api/status-page/upload-logo" -->
@@ -303,6 +304,7 @@
             <!-- eslint-disable-next-line vue/no-v-html-->
             <div v-if="! enableEditMode" class="alert-heading p-2" v-html="descriptionHTML"></div>
 
+
             <div v-if="editMode" class="mb-4">
                 <div>
                     <button class="btn btn-primary btn-add-group me-2" @click="addGroup">
@@ -380,6 +382,7 @@
                 </div>
             </footer>
         </div>
+
 
         <Confirm ref="confirmDelete" btn-style="btn-danger" :yes-text="$t('Yes')" :no-text="$t('No')"
                  @yes="deleteStatusPage"
@@ -628,6 +631,7 @@ export default {
          */
         "$root.loggedIn"(loggedIn) {
             if (loggedIn) {
+                console.log("M: [pages/StatusPage.vue/script/watch/'$root.loggedIn'] getSocket().emit('getStatusPage')")
                 this.$root.getSocket().emit("getStatusPage", this.slug, (res) => {
                     if (res.ok) {
                         this.config = res.config;
@@ -843,15 +847,17 @@ export default {
          */
         updateUpdateTimer() {
             clearInterval(this.updateCountdown);
-
-            this.updateCountdown = setInterval(() => {
-                const countdown = dayjs.duration(this.lastUpdateTime.add(this.autoRefreshInterval, "minutes").add(10, "seconds").diff(dayjs()));
-                if (countdown.as("seconds") < 0) {
-                    clearInterval(this.updateCountdown);
-                } else {
-                    this.updateCountdownText = countdown.format("mm:ss");
-                }
-            }, 1000);
+            //console.log("M: [StatusPage.vue/script/updateUpdateTimer] updateCountdownText: ", updateCountdownText)
+            
+                this.updateCountdown = setInterval(() => {
+                    const countdown = dayjs.duration(this.lastUpdateTime.add(this.autoRefreshInterval, "minutes").add(10, "seconds").diff(dayjs()));
+                    if (countdown.as("seconds") < 0) {
+                        clearInterval(this.updateCountdown);
+                    } else {
+                        console.log("M: [StatusPage.vue/script/updateUpdateTimer] countdown.format('mm:ss'): ", countdown.format("mm:ss"))
+                        this.updateCountdownText = countdown.format("mm:ss");
+                    }
+                }, 1000);
         },
 
         /** Enable editing mode */
