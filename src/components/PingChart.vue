@@ -44,7 +44,7 @@ export default {
             loading: false,
 
             // Configurable filtering on top of the returned data
-            chartPeriodHrs: 0,
+            chartPeriodHrs: 3,
 
             chartPeriodOptions: {
                 0: this.$t("recent"),
