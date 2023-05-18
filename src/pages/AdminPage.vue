@@ -10,13 +10,21 @@ import setAdminStatus from "./setAdminStatus.js"
 			return {
 				adminStatus: false,
 				passphrase: "",
-				adminStatus: "adminIdRequired"
+				adminStatus: "hello"
 			}
 		},
 		watch: {
 			// "adminIdRequired"(){
 			// 	console.log("Attempt to enter as admin")
 			// }
+		},
+		computed: {
+	        classes() {
+	            const classes = {};
+	            classes[this.$root.theme] = true;
+	            classes["mobile"] = this.$root.isMobile;
+	            return classes;
+	        },
 		},
 		methods: {
 			handleSetAdmin() {
@@ -56,29 +64,109 @@ import setAdminStatus from "./setAdminStatus.js"
 </script>
 
 <template>
-	<div>
-	    <input type="text" :value="passphrase" @change="comparePassphrase" autofocus autocomplete placeholder="enter passphrase">
-	    <h3>{{ adminStatus }}</h3>
-	</div>
-	 <div class="form-container">
-        <div class="form">
-            <form @submit.prevent="submit">
-                <h1 class="h3 mb-3 fw-normal" />
+	<div :class="classes">
 
-                <!--
-                <div>
+	<main>
+		<div class="form-container">
+	        <div class="form">
+
+			 <form @submit.prevent="submit">
+                 <h3 class="h3 mb-3 fw-normal"> {{ adminStatus }}</h3>
+
+                <div v-if="!tokenRequired" class="form-floating">
+                    <input id="passphrase" :value="passphrase" @change="comparePassphrase" type="text" class="form-control" placeholder="Passphrase">
+                    <label for="passPhrase">{{ $t("Passphrase") }}</label>
+                </div>
+
+                <div v-if="tokenRequired">
                     <div class="form-floating mt-3">
                         <input id="otp" v-model="token" type="text" maxlength="6" class="form-control" placeholder="123456">
                         <label for="otp">{{ $t("Token") }}</label>
                     </div>
                 </div>
 
+                <div class="form-check mb-3 mt-3 d-flex justify-content-center pe-4">
+    
+                </div>
+
                 <button class="w-100 btn btn-primary" type="submit" :disabled="processing">
                     {{ $t("Enter") }}
                 </button>
-                -->
+                
+             </form>
+		</div>
+		 <div class="form-container">
+	        <div class="form">
+	            <form @submit.prevent="submit">
+	                <h1 class="h3 mb-3 fw-normal" />
 
-            </form>
+	                <!--
+	                <div>
+	                    <div class="form-floating mt-3">
+	                        <input id="otp" v-model="token" type="text" maxlength="6" class="form-control" placeholder="123456">
+	                        <label for="otp">{{ $t("Token") }}</label>
+	                    </div>
+	                </div>
+
+	                <button class="w-100 btn btn-primary" type="submit" :disabled="processing">
+	                    {{ $t("Enter") }}
+	                </button>
+	                -->
+
+	            </form>
         </div>
+	        </div>
+	        </div>
+    </main>
     </div>
 </template>
+
+<style lang="scss" scoped>
+
+@import "../assets/vars.scss";
+
+.form-container {
+    display: flex;
+    align-items: center;
+    padding-top: 40px;
+    padding-bottom: 40px;
+}
+
+.form-floating {
+    > label {
+        padding-left: 1.3rem;
+    }
+
+    > .form-control {
+        padding-left: 1.3rem;
+    }
+}
+
+.form {
+    width: 100%;
+    max-width: 330px;
+    padding: 15px;
+    margin: auto;
+    text-align: center;
+}
+
+main {
+    min-height: calc(100vh - 160px);
+}
+
+.dark {
+    header {
+        background-color: $dark-header-bg;
+        border-bottom-color: $dark-header-bg !important;
+
+        span {
+            color: #f0f6fc;
+        }
+    }
+
+    .bottom-nav {
+        background-color: $dark-bg;
+    }
+}
+
+</style>
