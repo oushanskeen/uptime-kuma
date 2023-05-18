@@ -20,6 +20,9 @@ const favicon = new Favico({
 
 const TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Imd1ZXN0IiwiaWF0IjoxNjgxNTkzMTY5fQ.tOVExOZ4lTa3pig6eOw1RyHeo62UH5rQzDjR5Srf6s4"
 
+// const TOKEN = ""
+
+
 export default {
 
     data() {
@@ -114,10 +117,12 @@ export default {
             });
 
             socket.on("autoLogin", (monitorID, data) => {
-                this.loggedIn = true;
-                this.storage().token = "autoLogin";
-                this.socket.token = "autoLogin";
-                this.allowLoginDialog = false;
+                if(false){
+                    this.loggedIn = true;
+                    this.storage().token = "autoLogin";
+                    this.socket.token = "autoLogin";
+                    this.allowLoginDialog = false;
+                }
             });
 
             socket.on("monitorList", (data) => {

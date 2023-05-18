@@ -11,6 +11,7 @@ import List from "./pages/List.vue";
 const Settings = () => import("./pages/Settings.vue");
 import Setup from "./pages/Setup.vue";
 import StatusPage from "./pages/StatusPage.vue";
+import AdminPage from "./pages/AdminPage.vue";
 import Entry from "./pages/Entry.vue";
 import ManageStatusPage from "./pages/ManageStatusPage.vue";
 import AddStatusPage from "./pages/AddStatusPage.vue";
@@ -33,10 +34,19 @@ import Proxies from "./components/settings/Proxies.vue";
 import Backup from "./components/settings/Backup.vue";
 import About from "./components/settings/About.vue";
 
-const routes = [
+// import.meta.env.VITE_ADMIN == undefined
+// ? import.meta.env.VITE_ADMIN  = false
+// : import.meta.env.VITE_ADMIN 
+
+// localStorage.setItem('storedData', false)
+
+const privateRoutes = [
     {
         path: "/",
-        component: Entry,
+        //component: Entry,
+        redirect: () => {
+            return "/status/" + import.meta.env.VITE_PUBLIC_DASHBOARD_NAME
+        }
     },
     {
         // If it is "/dashboard", the active link is not working
@@ -165,6 +175,10 @@ const routes = [
                         component: EditMaintenance,
                     },
                 ],
+                beforeEnter: (to, from) => {
+                    console.log("localStorage.getItem('storedData'): ", localStorage.getItem('storedData'))
+                    return localStorage.getItem('isAdminHere') == 'admin is here' ? true : false
+                },
             },
         ],
     },
@@ -188,10 +202,51 @@ const routes = [
         path: "/:pathMatch(.*)*",
         component: NotFound,
     },
+    {
+        path: "/admin",
+        component: AdminPage,
+    },
 ];
+
+const publicRoutes = [
+    {
+        path: "/status/:slug",
+        component: StatusPage,
+    },
+    {
+        path: "/admin",
+        component: AdminPage,
+    },
+    {
+        path: "/:pathMatch(.*)*",
+        component: NotFound,
+    },
+];
+
+const routes = privateRoutes
 
 export const router = createRouter({
     linkActiveClass: "active",
     history: createWebHistory(),
     routes,
 });
+
+// router.beforeEach(async (to, from) => {
+//   // if (
+//   //   // make sure the user is authenticated
+//   //   !isAuthenticated &&
+//   //   // ❗️ Avoid an infinite redirect
+//   //   to.name !== 'Login'
+//   // ) {
+
+//     const goToStatusPage = localStorage.getItem('isAdminHere') == 'admin is here' ? true : false
+//     // redirect the user to the login page
+//     if(true){
+//         return { name: to.name }
+//     }else{
+//         return { name: '/admin' }
+//     }
+//   //}
+// })
+
+// export router
